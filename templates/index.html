@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лента | ДОРСЕТЬ</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="main-header">
+            <a href="/" class="logo">ДОРСЕТЬ</a>
+        </header>
+
+        <main class="feed-page">
+            <div class="reels-container">
+                <div class="reels-player">
+                    <video id="main-video" autoplay loop muted playsinline>
+                        <source src="" type="video/mp4">
+                    </video>
+
+                    <div class="reels-overlay">
+                        <h2 id="video-name"></h2>
+                        <p id="video-pop"></p>
+                        <p id="video-route"></p>
+                        <button class="like-btn" disabled>
+                            ❤️ <span id="video-likes">0</span>
+                        </button>
+                    </div>
+
+                    <button class="next-video-btn-overlay" id="next-btn">Следующий →</button>
+                </div>
+            </div>
+        </main>
+
+        <nav class="bottom-nav">
+            <a href="/" class="bottom-nav-link active">Лента</a>
+            <a href="/add" class="bottom-nav-link">Добавление</a>
+            <a href="/grid" class="bottom-nav-link">Плитка</a>
+        </nav>
+    </div>
+
+    <script>
+        const cities = {{ cities | tojson }};
+        let idx = 0;
+
+        function loadVideo(i) {
+            const c = cities[i];
+            const v = document.getElementById('main-video');
+            v.src = c.video_url;
+            v.poster = c.image_url;
+            v.load();
+            v.play().catch(() => {});
+
+            document.getElementById('video-name').textContent = c.name;
+            document.getElementById('video-pop').textContent = 'Население: ' + c.pop.toLocaleString();
+            document.getElementById('video-route').textContent = 'Дорога: ' + c.route;
+            document.getElementById('video-likes').textContent = c.likes_count || 0;
+            idx = i;
+        }
+
+        document.getElementById('next-btn').addEventListener('click', () => {
+            idx = (idx + 1) % cities.length;
+            loadVideo(idx);
+        });
+
+        const params = new URLSearchParams(window.location.search);
+        const startId = parseInt(params.get('city_id'));
+        if (startId) {
+            const found = cities.findIndex(c => c.id === startId);
+            if (found !== -1) idx = found;
+        }
+
+        loadVideo(idx);
+    </script>
+</body>
+</html>

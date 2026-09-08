@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавление | ДОРСЕТЬ</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="main-header">
+            <a href="/" class="logo">ДОРСЕТЬ</a>
+        </header>
+
+        <main class="add-page">
+            <h1 class="page-title">Добавление города</h1>
+            <p class="page-subtitle">Новая услуга</p>
+
+            <form class="add-form" id="add-form">
+                <div class="form-grid">
+                    <label>Название города <input type="text" name="name" required></label>
+                    <label>Широта <input type="number" step="any" name="lat" required></label>
+                    <label>Долгота <input type="number" step="any" name="lon" required></label>
+                    <label>Население <input type="number" name="pop" required></label>
+                    <label>Дорога / регион <input type="text" name="route" placeholder="Например: М-4 «Дон»" required></label>
+                    <label>Родительский город
+                        <select name="parent">
+                            <option value="">Выберите город</option>
+                            {% for city in cities %}
+                                <option value="{{ city.name }}">{{ city.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </div>
+
+                <div class="upload-buttons">
+                    <label class="upload-btn" for="photo-input">📷 + Фото</label>
+                    <input type="file" id="photo-input" accept="image/*" class="upload-input">
+
+                    <label class="upload-btn" for="video-input">🎬 + Видео</label>
+                    <input type="file" id="video-input" accept="video/*" class="upload-input">
+                </div>
+
+                <button type="button" class="btn-primary" id="add-btn">Добавить</button>
+            </form>
+        </main>
+
+        <nav class="bottom-nav">
+            <a href="/" class="bottom-nav-link">Лента</a>
+            <a href="/add" class="bottom-nav-link active">Добавление</a>
+            <a href="/grid" class="bottom-nav-link">Плитка</a>
+        </nav>
+    </div>
+
+    <script>
+        document.getElementById('add-btn').addEventListener('click', function() {
+            this.style.transform = 'scale(0.98)';
+            setTimeout(() => { this.style.transform = ''; }, 150);
+        });
+
+        document.querySelectorAll('.upload-input').forEach(input => {
+            input.addEventListener('change', function() {
+                const label = document.querySelector(`label[for="${this.id}"]`);
+                if (this.files.length > 0) {
+                    label.textContent = '✅ ' + this.files[0].name;
+                    label.classList.add('file-selected');
+                } else {
+                    label.textContent = this.id === 'photo-input' ? '📷 + Фото' : '🎬 + Видео';
+                    label.classList.remove('file-selected');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

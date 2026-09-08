@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Плитка | ДОРСЕТЬ</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="main-header">
+            <a href="/" class="logo">ДОРСЕТЬ</a>
+        </header>
+
+        <main class="grid-page">
+            <h1 class="page-title">Города сети</h1>
+
+            <div class="filters">
+                <select id="filter-route">
+                    <option value="">Фильтр по дороге</option>
+                    <option value="М-4 «Дон»">М-4 «Дон»</option>
+                    <option value="М-11 «Нева»">М-11 «Нева»</option>
+                    <option value="М-12 «Восток»">М-12 «Восток»</option>
+                    <option value="М-7 «Волга»">М-7 «Волга»</option>
+                </select>
+                <input type="text" id="search-input" placeholder="🔍 Найти город">
+            </div>
+
+            <div class="grid-container" id="grid-container">
+                {% for city in cities %}
+                <div class="card" data-route="{{ city.route }}" data-name="{{ city.name | lower }}"
+                     onclick="window.location.href='/?city_id={{ city.id }}'">
+                    <img src="{{ city.image_url }}" alt="{{ city.name }}"
+                         onerror="this.src='https://picsum.photos/400/300?random={{ city.id }}'">
+                    <div class="card-body">
+                        <h3>{{ city.name }}</h3>
+                        <p class="card-route">🛣️ {{ city.route }}</p>
+                        <p class="card-likes">❤️ {{ city.likes_count }}</p>
+                        <div class="cost-badge"> Подробнее</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </main>
+
+        <nav class="bottom-nav">
+            <a href="/" class="bottom-nav-link">Лента</a>
+            <a href="/add" class="bottom-nav-link">Добавление</a>
+            <a href="/grid" class="bottom-nav-link active">Плитка</a>
+        </nav>
+    </div>
+
+    <script>
+        const routeFilter = document.getElementById('filter-route');
+        const searchInput = document.getElementById('search-input');
+        const cards = document.querySelectorAll('.card');
+
+        function applyFilters() {
+            const route = routeFilter.value;
+            const query = searchInput.value.toLowerCase();
+            cards.forEach(card => {
+                const matchRoute = !route || card.dataset.route === route;
+                const matchSearch = card.dataset.name.includes(query);
+                card.style.display = (matchRoute && matchSearch) ? '' : 'none';
+            });
+        }
+
+        routeFilter.addEventListener('change', applyFilters);
+        searchInput.addEventListener('input', applyFilters);
+    </script>
+</body>
+</html>
