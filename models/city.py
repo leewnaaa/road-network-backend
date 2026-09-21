@@ -11,8 +11,8 @@ class City(Base):
     status = Column(String(20), nullable=False, default="draft")
     image_url = Column(String(255), nullable=True)
     video_url = Column(String(255), nullable=True)
-    route = Column(String(100), nullable=True)                       # поле по теме №1
-    parent_id = Column(Integer, ForeignKey("cities.id"), nullable=True)  # поле по теме №2
+    route = Column(String(100), nullable=True)
+    parent_id = Column(Integer, ForeignKey("cities.id"), nullable=True)
     lat = Column(Float, nullable=True)
     lon = Column(Float, nullable=True)
     creator_id = Column(Integer, ForeignKey("users.id"), nullable=False)

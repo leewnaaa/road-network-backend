@@ -1,9 +1,8 @@
-/* ===== ПАЛИТРА «ДОРСЕТЬ / АВТОДОР» =====
-   Точные коды сняты приблизительно — уточни пипеткой на skavtodor.ru при желании */
+
 :root {
-    --navy: #111111;       /* тёмный — шапка, навигация (было navy, теперь чёрный как на сайте) */
+    --navy: #111111;
     --navy-dark: #000000;
-    --accent: #F1541C;     /* фирменный оранжевый Автодора */
+    --accent: #F1541C;
     --accent-dark: #C7430F;
     --bg: #F4F5F7;
     --text: #1a1a1a;
@@ -62,7 +61,7 @@ main {
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-    min-height: 0; /* критично, чтобы flex-потомки могли схлопываться корректно */
+    min-height: 0;
 }
 
 .grid-page,
@@ -217,7 +216,6 @@ main {
     display: block;
 }
 
-/* правая колонка кнопок — лайк и «дальше» друг под другом, ближе к низу */
 .reels-actions {
     position: absolute;
     right: 14px;
@@ -408,7 +406,6 @@ main {
     gap: 14px;
 }
 
-/* --- блок загрузки фото/видео (теперь сверху формы) --- */
 .upload-section {
     display: grid;
     grid-template-columns: 1fr 1fr;

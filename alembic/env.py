@@ -7,7 +7,7 @@ from alembic import context
 
 from core.config import settings
 from db.base import Base
-# Импортируем здесь все модели, чтобы Alembic их увидел!
+
 from models.user import User
 from models.city import City
 from models.like import Like

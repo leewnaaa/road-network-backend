@@ -19,7 +19,7 @@ cities_db = [
         "parent": None,
         "description": "Столица и корневой узел всей дорожной сети — сюда сходятся ключевые федеральные трассы.",
         "details": "Отсюда стартуют трассы М-4, М-11 и М-12. Средняя нагрузка на сеть — более 300 тыс. автомобилей в сутки.",
-        "likes": ["user_101", "user_102", "user_103"],  # Массив ID пользователей
+        "likes": ["user_101", "user_102", "user_103"],  # 3 лайка
         "image_url": "http://localhost:9000/media/moscow.jpg",
         "video_url": "http://localhost:9000/media/moscow.mp4"
     },

@@ -15,7 +15,7 @@
         <main class="add-page">
            {% if not draft %}
             <h1 class="page-title">Добавление города</h1>
-            <p class="page-subtitle">Название, фото, видео и данные о городе</p>
+            <p class="page-subtitle">Название, фото и видео города</p>
 
             <form class="add-form" id="add-form" action="/add" method="POST">
                 <div class="upload-section">
@@ -38,33 +38,12 @@
 
                 <div class="form-grid">
                     <label>Название города <input type="text" name="name" required></label>
-                    <label>Краткое описание
-                        <textarea name="description" rows="3"></textarea>
-                    </label>
-                    <label>Дорога / регион
-                        <input type="text" name="route" placeholder="Например: М-4 «Дон»">
-                    </label>
-                    <label>Широта
-                        <input type="number" step="any" name="lat">
-                    </label>
-                    <label>Долгота
-                        <input type="number" step="any" name="lon">
-                    </label>
-                    <label>Родительский город
-                        <select name="parent_id">
-                            <option value="">Нет (корневой узел)</option>
-                            {% for c in parent_options %}
-                                <option value="{{ c.id }}">{{ c.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </label>
                 </div>
 
                 <button type="submit" class="btn-primary">Далее</button>
             </form>
 
             <p class="page-subtitle" style="margin: 0 18px 18px;">
-                Фото и видео в этой лабораторной работе не сохраняются на сервере — используются изображения по умолчанию.
             </p>
 
             <script>
@@ -99,7 +78,6 @@
             </script>
 
             {% else %}
-
             <form class="add-form" action="/add/{{ draft.id }}/publish" method="POST">
                 <h1 class="page-title">{{ draft.name }}</h1>
 
@@ -118,7 +96,6 @@
                     </div>
                 </div>
 
-                <form class="add-form" action="/add/{{ draft.id }}/publish" method="POST">
                 <div class="form-grid">
                     <label>Краткое описание
                         <textarea name="description" rows="3" required>{{ draft.description or '' }}</textarea>

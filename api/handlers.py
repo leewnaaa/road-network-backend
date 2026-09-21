@@ -30,14 +30,10 @@ def css_version():
 
 templates.env.globals["css_version"] = css_version
 
-# Авторизации в проекте нет, поэтому все действия выполняются
-# от лица тестового пользователя (см. INSERT INTO users в Adminer).
 CURRENT_USER_ID = 1
 
-# Заглушки для случаев, когда у услуги нет фото/видео (или они недоступны по URL)
-DEFAULT_IMAGE_URL = "http://localhost:9000/media/vyvody-dorozhnoe-stroitelstvo.jpg"
-DEFAULT_VIDEO_URL = "/static/img/default-city.mp4"
-
+DEFAULT_IMAGE_URL = "http://localhost:9000/media/default-city.jpg"
+DEFAULT_VIDEO_URL = "http://localhost:9000/media/default-city.MP4"
 
 def _with_media_defaults(city: City) -> City:
     if not city.image_url:
@@ -58,9 +54,6 @@ async def _get_likes_map(db: AsyncSession, city_ids: list[int]) -> dict[int, int
     return counts
 
 
-# ---------------------------------------------------------------------------
-# 1. GET / — лента (reels-плеер), только опубликованные услуги
-# ---------------------------------------------------------------------------
 @router.get("/")
 async def get_feed(request: Request, city_id: int | None = None, db: AsyncSession = Depends(get_db)):
     stmt = select(City).where(City.status == "published").order_by(City.published_at.desc())
@@ -99,9 +92,6 @@ async def get_feed(request: Request, city_id: int | None = None, db: AsyncSessio
     )
 
 
-# ---------------------------------------------------------------------------
-# 2. GET /grid — плитка с фильтрами (через GET-параметры, без JS)
-# ---------------------------------------------------------------------------
 @router.get("/grid")
 async def get_grid(
     request: Request,
@@ -149,9 +139,6 @@ async def get_grid(
     )
 
 
-# ---------------------------------------------------------------------------
-# 3. GET /add — форма создания черновика ИЛИ публикации существующего
-# ---------------------------------------------------------------------------
 @router.get("/add")
 async def show_add_form(request: Request, db: AsyncSession = Depends(get_db)):
     stmt = select(City).where(City.creator_id == CURRENT_USER_ID, City.status == "draft")
@@ -172,17 +159,9 @@ async def show_add_form(request: Request, db: AsyncSession = Depends(get_db)):
     )
 
 
-# ---------------------------------------------------------------------------
-# 4. POST /add — создание черновика (ORM)
-# ---------------------------------------------------------------------------
 @router.post("/add")
 async def create_draft(
     name: str = Form(...),
-    description: str = Form(""),
-    route: str = Form(""),
-    lat: str = Form(""),
-    lon: str = Form(""),
-    parent_id: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
     stmt = select(City).where(City.creator_id == CURRENT_USER_ID, City.status == "draft")
@@ -194,21 +173,12 @@ async def create_draft(
             name=name.strip(),
             status="draft",
             creator_id=CURRENT_USER_ID,
-            description=description.strip() or None,
-            route=route.strip() or None,
-            lat=float(lat) if lat.strip() else None,
-            lon=float(lon) if lon.strip() else None,
-            parent_id=int(parent_id) if parent_id.strip() else None,
         )
         db.add(new_city)
         await db.commit()
 
     return RedirectResponse(url="/add", status_code=303)
 
-
-# ---------------------------------------------------------------------------
-# 5. POST /add/{city_id}/publish — публикация черновика (ORM)
-# ---------------------------------------------------------------------------
 @router.post("/add/{city_id}/publish")
 async def publish_city(
     city_id: int,
@@ -235,10 +205,6 @@ async def publish_city(
 
     return RedirectResponse(url="/grid", status_code=303)
 
-
-# ---------------------------------------------------------------------------
-# 6. POST /{city_id}/delete — мягкое удаление через SQL-курсор (без ORM)
-# ---------------------------------------------------------------------------
 @router.post("/{city_id}/delete")
 async def delete_city(city_id: int, db: AsyncSession = Depends(get_db)):
     update_query = """
