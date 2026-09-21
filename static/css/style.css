@@ -173,11 +173,27 @@ main {
     margin-bottom: 3px;
 }
 
-.reels-desc {
+.reels-desc-wrap {
+    margin-top: 8px;
+}
+
+.desc-toggle-checkbox {
+    display: none;
+}
+
+.description-text {
     font-size: 12.5px;
     line-height: 1.4;
-    margin-top: 8px;
     opacity: .95;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.desc-toggle-checkbox:checked + .description-text {
+    -webkit-line-clamp: unset;
+    overflow: visible;
 }
 
 .desc-more-inline {
@@ -185,6 +201,20 @@ main {
     font-weight: 700;
     cursor: pointer;
     white-space: nowrap;
+    display: block;
+    margin-top: 4px;
+}
+
+.desc-less-label {
+    display: none;
+}
+
+.desc-toggle-checkbox:checked ~ .desc-more-label {
+    display: none;
+}
+
+.desc-toggle-checkbox:checked ~ .desc-less-label {
+    display: block;
 }
 
 /* правая колонка кнопок — лайк и «дальше» друг под другом, ближе к низу */

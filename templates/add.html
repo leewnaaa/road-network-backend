@@ -5,16 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Добавление | ДОРСЕТЬ</title>
     <link rel="stylesheet" href="/static/css/style.css?v={{ css_version() }}">
-    <script>
-        (function () {
-            function setAppVh() {
-                document.documentElement.style.setProperty("--app-vh", window.innerHeight * 0.01 + "px");
-            }
-            setAppVh();
-            window.addEventListener("resize", setAppVh);
-            window.addEventListener("orientationchange", setAppVh);
-        })();
-    </script>
 </head>
 <body>
     <div class="app-container">
@@ -23,10 +13,11 @@
         </header>
 
         <main class="add-page">
+           {% if not draft %}
             <h1 class="page-title">Добавление города</h1>
-            <p class="page-subtitle">Новая услуга</p>
+            <p class="page-subtitle">Название, фото, видео и данные о городе</p>
 
-            <form class="add-form" id="add-form">
+            <form class="add-form" id="add-form" action="/add" method="POST">
                 <div class="upload-section">
                     <div class="upload-item">
                         <div class="upload-preview" id="photo-preview">
@@ -47,22 +38,113 @@
 
                 <div class="form-grid">
                     <label>Название города <input type="text" name="name" required></label>
-                    <label>Широта <input type="number" step="any" name="lat" required></label>
-                    <label>Долгота <input type="number" step="any" name="lon" required></label>
-                    <label>Дорога / регион <input type="text" name="route" placeholder="Например: М-4 «Дон»" required></label>
-                    <label>Описание <textarea name="description" rows="3" placeholder="Коротко о городе и его роли в сети"></textarea></label>
+                    <label>Краткое описание
+                        <textarea name="description" rows="3"></textarea>
+                    </label>
+                    <label>Дорога / регион
+                        <input type="text" name="route" placeholder="Например: М-4 «Дон»">
+                    </label>
+                    <label>Широта
+                        <input type="number" step="any" name="lat">
+                    </label>
+                    <label>Долгота
+                        <input type="number" step="any" name="lon">
+                    </label>
                     <label>Родительский город
-                        <select name="parent">
-                            <option value="">Выберите город</option>
-                            {% for city in cities %}
-                                <option value="{{ city.name }}">{{ city.name }}</option>
+                        <select name="parent_id">
+                            <option value="">Нет (корневой узел)</option>
+                            {% for c in parent_options %}
+                                <option value="{{ c.id }}">{{ c.name }}</option>
                             {% endfor %}
                         </select>
                     </label>
                 </div>
 
-                <button type="submit" class="btn-primary" id="add-btn">Добавить</button>
+                <button type="submit" class="btn-primary">Далее</button>
             </form>
+
+            <p class="page-subtitle" style="margin: 0 18px 18px;">
+                Фото и видео в этой лабораторной работе не сохраняются на сервере — используются изображения по умолчанию.
+            </p>
+
+            <script>
+                document.getElementById('photo-input').addEventListener('change', function() {
+                    const img = document.getElementById('photo-preview-img');
+                    const label = document.querySelector('label[for="photo-input"]');
+                    if (this.files.length > 0) {
+                        img.src = URL.createObjectURL(this.files[0]);
+                        label.textContent = '✅ ' + this.files[0].name;
+                        label.classList.add('file-selected');
+                    } else {
+                        img.src = 'https://placehold.co/160x120?text=Фото';
+                        label.textContent = '📷 + Фото';
+                        label.classList.remove('file-selected');
+                    }
+                });
+
+                document.getElementById('video-input').addEventListener('change', function() {
+                    const preview = document.getElementById('video-preview');
+                    const label = document.querySelector('label[for="video-input"]');
+                    if (this.files.length > 0) {
+                        const url = URL.createObjectURL(this.files[0]);
+                        preview.innerHTML = `<video src="${url}" muted loop autoplay playsinline></video>`;
+                        label.textContent = '✅ ' + this.files[0].name;
+                        label.classList.add('file-selected');
+                    } else {
+                        preview.innerHTML = '<div class="video-placeholder" id="video-placeholder">🎬 Видео не выбрано</div>';
+                        label.textContent = '🎬 + Видео';
+                        label.classList.remove('file-selected');
+                    }
+                });
+            </script>
+
+            {% else %}
+
+            <form class="add-form" action="/add/{{ draft.id }}/publish" method="POST">
+                <h1 class="page-title">{{ draft.name }}</h1>
+
+                <div class="upload-section" style="margin: 0 18px 14px;">
+                    <div class="upload-item">
+                        <div class="upload-preview">
+                            <img src="{{ draft.image_url }}" alt="{{ draft.name }}">
+                        </div>
+                        <p class="page-subtitle" style="margin: 0;">Фото по умолчанию</p>
+                    </div>
+                    <div class="upload-item">
+                        <div class="upload-preview">
+                            <video src="{{ draft.video_url }}" muted loop autoplay playsinline></video>
+                        </div>
+                        <p class="page-subtitle" style="margin: 0;">Видео по умолчанию</p>
+                    </div>
+                </div>
+
+                <form class="add-form" action="/add/{{ draft.id }}/publish" method="POST">
+                <div class="form-grid">
+                    <label>Краткое описание
+                        <textarea name="description" rows="3" required>{{ draft.description or '' }}</textarea>
+                    </label>
+                    <label>Дорога / регион
+                        <input type="text" name="route" placeholder="Например: М-4 «Дон»" value="{{ draft.route or '' }}" required>
+                    </label>
+                    <label>Широта
+                        <input type="number" step="any" name="lat" value="{{ '' if draft.lat is none else draft.lat }}" required>
+                    </label>
+                    <label>Долгота
+                        <input type="number" step="any" name="lon" value="{{ '' if draft.lon is none else draft.lon }}" required>
+                    </label>
+                    <label>Родительский город
+                        <select name="parent_id">
+                            <option value="">Нет (корневой узел)</option>
+                            {% for c in parent_options %}
+                                <option value="{{ c.id }}" {% if draft.parent_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-primary">Опубликовать</button>
+            </form>
+            {% endif %}
         </main>
 
         <nav class="bottom-nav">
@@ -71,74 +153,5 @@
             <a href="/grid" class="bottom-nav-link">Плитка</a>
         </nav>
     </div>
-
-    <script>
-        // Превью фото — по выбору файла показываем реальный кадр, иначе заглушка
-        document.getElementById('photo-input').addEventListener('change', function() {
-            const img = document.getElementById('photo-preview-img');
-            const label = document.querySelector('label[for="photo-input"]');
-            if (this.files.length > 0) {
-                img.src = URL.createObjectURL(this.files[0]);
-                label.textContent = '✅ ' + this.files[0].name;
-                label.classList.add('file-selected');
-            } else {
-                img.src = 'https://placehold.co/160x120?text=Фото';
-                label.textContent = '📷 + Фото';
-                label.classList.remove('file-selected');
-            }
-        });
-
-        // Превью видео — по выбору файла показываем реальный проигрыватель, иначе заглушка
-        document.getElementById('video-input').addEventListener('change', function() {
-            const preview = document.getElementById('video-preview');
-            const label = document.querySelector('label[for="video-input"]');
-            if (this.files.length > 0) {
-                const url = URL.createObjectURL(this.files[0]);
-                preview.innerHTML = `<video src="${url}" muted loop autoplay playsinline></video>`;
-                label.textContent = '✅ ' + this.files[0].name;
-                label.classList.add('file-selected');
-            } else {
-                preview.innerHTML = '<div class="video-placeholder" id="video-placeholder">🎬 Видео не выбрано</div>';
-                label.textContent = '🎬 + Видео';
-                label.classList.remove('file-selected');
-            }
-        });
-
-        // Реальная отправка формы на сервер
-        const form = document.getElementById('add-form');
-        const addBtn = document.getElementById('add-btn');
-
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            addBtn.style.transform = 'scale(0.98)';
-            setTimeout(() => { addBtn.style.transform = ''; }, 150);
-
-            addBtn.disabled = true;
-            const originalText = addBtn.textContent;
-            addBtn.textContent = 'Добавляем...';
-
-            try {
-                const formData = new FormData(form);
-                const response = await fetch('/add', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    window.location.href = '/grid';
-                } else {
-                    const err = await response.json().catch(() => ({}));
-                    alert('Не удалось добавить город: ' + (err.error || response.statusText));
-                    addBtn.disabled = false;
-                    addBtn.textContent = originalText;
-                }
-            } catch (err) {
-                alert('Ошибка сети при добавлении города');
-                addBtn.disabled = false;
-                addBtn.textContent = originalText;
-            }
-        });
-    </script>
 </body>
 </html>

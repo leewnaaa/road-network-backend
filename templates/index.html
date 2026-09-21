@@ -5,16 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Лента | ДОРСЕТЬ</title>
     <link rel="stylesheet" href="/static/css/style.css?v={{ css_version() }}">
-    <script>
-        (function () {
-            function setAppVh() {
-                document.documentElement.style.setProperty("--app-vh", window.innerHeight * 0.01 + "px");
-            }
-            setAppVh();
-            window.addEventListener("resize", setAppVh);
-            window.addEventListener("orientationchange", setAppVh);
-        })();
-    </script>
 </head>
 <body>
     <div class="app-container">
@@ -23,30 +13,40 @@
         </header>
 
         <main class="feed-page">
+            {% if current_city %}
             <div class="reels-container">
                 <div class="reels-player">
-                    <video id="main-video" autoplay loop muted playsinline>
-                        <source src="" type="video/mp4">
+                    <video autoplay loop muted playsinline poster="{{ current_city.image_url }}">
+                        <source src="{{ current_city.video_url }}" type="video/mp4">
                     </video>
 
                     <div class="reels-actions">
                         <div class="action-item">
-                            <button class="action-circle" disabled>❤️</button>
-                            <span class="action-label" id="video-likes">0</span>
+                            <span class="action-circle">❤️</span>
+                            <span class="action-label">{{ current_city.likes_count }}</span>
                         </div>
                         <div class="action-item">
-                            <button class="action-circle" id="next-btn">→</button>
+                            <a class="action-circle" href="/?city_id={{ next_city_id }}">→</a>
                             <span class="action-label">Дальше</span>
                         </div>
                     </div>
 
                     <div class="reels-overlay">
-                        <h2 id="video-name"></h2>
-                        <p id="video-route"></p>
-                        <p class="reels-desc" id="video-desc"></p>
+                        <h2>{{ current_city.name }}</h2>
+                        <p>Дорога: {{ current_city.route }}</p>
+
+                        <div class="reels-desc-wrap">
+                            <input type="checkbox" id="desc-toggle" class="desc-toggle-checkbox">
+                            <p class="reels-desc description-text">{{ current_city.description }}</p>
+                            <label for="desc-toggle" class="desc-more-inline desc-more-label">Ещё...</label>
+                            <label for="desc-toggle" class="desc-more-inline desc-less-label">Свернуть</label>
+                        </div>
                     </div>
                 </div>
             </div>
+            {% else %}
+            <p class="page-subtitle" style="margin: 18px;">Опубликованных городов пока нет.</p>
+            {% endif %}
         </main>
 
         <nav class="bottom-nav">
@@ -55,69 +55,5 @@
             <a href="/grid" class="bottom-nav-link">Плитка</a>
         </nav>
     </div>
-
-    <script>
-        const cities = {{ cities | tojson }};
-        let idx = 0;
-        let descExpanded = false;
-
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str || '';
-            return div.innerHTML;
-        }
-
-        function renderDescription() {
-            const c = cities[idx];
-            const descEl = document.getElementById('video-desc');
-            const desc = escapeHtml(c.description);
-            const details = escapeHtml(c.details);
-
-            if (!descExpanded) {
-                descEl.innerHTML = desc + ' <span class="desc-more-inline" id="desc-toggle">Еще...</span>';
-            } else {
-                descEl.innerHTML = desc + ' ' + details + ' <span class="desc-more-inline" id="desc-toggle">Свернуть</span>';
-            }
-
-            const toggle = document.getElementById('desc-toggle');
-            if (toggle) {
-                toggle.addEventListener('click', () => {
-                    descExpanded = !descExpanded;
-                    renderDescription();
-                });
-            }
-        }
-
-        function loadVideo(i) {
-            const c = cities[i];
-            const v = document.getElementById('main-video');
-            v.src = c.video_url;
-            v.poster = c.image_url;
-            v.load();
-            v.play().catch(() => {});
-
-            document.getElementById('video-name').textContent = c.name;
-            document.getElementById('video-route').textContent = 'Дорога: ' + c.route;
-            document.getElementById('video-likes').textContent = c.likes_count || 0;
-
-            idx = i;
-            descExpanded = false;
-            renderDescription();
-        }
-
-        document.getElementById('next-btn').addEventListener('click', () => {
-            idx = (idx + 1) % cities.length;
-            loadVideo(idx);
-        });
-
-        const params = new URLSearchParams(window.location.search);
-        const startId = parseInt(params.get('city_id'));
-        if (startId) {
-            const found = cities.findIndex(c => c.id === startId);
-            if (found !== -1) idx = found;
-        }
-
-        loadVideo(idx);
-    </script>
 </body>
 </html>
