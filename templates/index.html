@@ -4,7 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Лента | ДОРСЕТЬ</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css?v={{ css_version() }}">
+    <script>
+        (function () {
+            function setAppVh() {
+                document.documentElement.style.setProperty("--app-vh", window.innerHeight * 0.01 + "px");
+            }
+            setAppVh();
+            window.addEventListener("resize", setAppVh);
+            window.addEventListener("orientationchange", setAppVh);
+        })();
+    </script>
 </head>
 <body>
     <div class="app-container">
@@ -19,16 +29,22 @@
                         <source src="" type="video/mp4">
                     </video>
 
-                    <div class="reels-overlay">
-                        <h2 id="video-name"></h2>
-                        <p id="video-pop"></p>
-                        <p id="video-route"></p>
-                        <button class="like-btn" disabled>
-                            ❤️ <span id="video-likes">0</span>
-                        </button>
+                    <div class="reels-actions">
+                        <div class="action-item">
+                            <button class="action-circle" disabled>❤️</button>
+                            <span class="action-label" id="video-likes">0</span>
+                        </div>
+                        <div class="action-item">
+                            <button class="action-circle" id="next-btn">→</button>
+                            <span class="action-label">Дальше</span>
+                        </div>
                     </div>
 
-                    <button class="next-video-btn-overlay" id="next-btn">Следующий →</button>
+                    <div class="reels-overlay">
+                        <h2 id="video-name"></h2>
+                        <p id="video-route"></p>
+                        <p class="reels-desc" id="video-desc"></p>
+                    </div>
                 </div>
             </div>
         </main>
@@ -43,6 +59,34 @@
     <script>
         const cities = {{ cities | tojson }};
         let idx = 0;
+        let descExpanded = false;
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        function renderDescription() {
+            const c = cities[idx];
+            const descEl = document.getElementById('video-desc');
+            const desc = escapeHtml(c.description);
+            const details = escapeHtml(c.details);
+
+            if (!descExpanded) {
+                descEl.innerHTML = desc + ' <span class="desc-more-inline" id="desc-toggle">Еще...</span>';
+            } else {
+                descEl.innerHTML = desc + ' ' + details + ' <span class="desc-more-inline" id="desc-toggle">Свернуть</span>';
+            }
+
+            const toggle = document.getElementById('desc-toggle');
+            if (toggle) {
+                toggle.addEventListener('click', () => {
+                    descExpanded = !descExpanded;
+                    renderDescription();
+                });
+            }
+        }
 
         function loadVideo(i) {
             const c = cities[i];
@@ -53,10 +97,12 @@
             v.play().catch(() => {});
 
             document.getElementById('video-name').textContent = c.name;
-            document.getElementById('video-pop').textContent = 'Население: ' + c.pop.toLocaleString();
             document.getElementById('video-route').textContent = 'Дорога: ' + c.route;
             document.getElementById('video-likes').textContent = c.likes_count || 0;
+
             idx = i;
+            descExpanded = false;
+            renderDescription();
         }
 
         document.getElementById('next-btn').addEventListener('click', () => {

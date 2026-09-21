@@ -4,7 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Добавление | ДОРСЕТЬ</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css?v={{ css_version() }}">
+    <script>
+        (function () {
+            function setAppVh() {
+                document.documentElement.style.setProperty("--app-vh", window.innerHeight * 0.01 + "px");
+            }
+            setAppVh();
+            window.addEventListener("resize", setAppVh);
+            window.addEventListener("orientationchange", setAppVh);
+        })();
+    </script>
 </head>
 <body>
     <div class="app-container">
@@ -17,12 +27,30 @@
             <p class="page-subtitle">Новая услуга</p>
 
             <form class="add-form" id="add-form">
+                <div class="upload-section">
+                    <div class="upload-item">
+                        <div class="upload-preview" id="photo-preview">
+                            <img id="photo-preview-img" src="https://placehold.co/160x120?text=Фото" alt="Заглушка фото">
+                        </div>
+                        <label class="upload-btn" for="photo-input">📷 + Фото</label>
+                        <input type="file" id="photo-input" name="photo" accept="image/*" class="upload-input">
+                    </div>
+
+                    <div class="upload-item">
+                        <div class="upload-preview" id="video-preview">
+                            <div class="video-placeholder" id="video-placeholder">🎬 Видео не выбрано</div>
+                        </div>
+                        <label class="upload-btn" for="video-input">🎬 + Видео</label>
+                        <input type="file" id="video-input" name="video" accept="video/*" class="upload-input">
+                    </div>
+                </div>
+
                 <div class="form-grid">
                     <label>Название города <input type="text" name="name" required></label>
                     <label>Широта <input type="number" step="any" name="lat" required></label>
                     <label>Долгота <input type="number" step="any" name="lon" required></label>
-                    <label>Население <input type="number" name="pop" required></label>
                     <label>Дорога / регион <input type="text" name="route" placeholder="Например: М-4 «Дон»" required></label>
+                    <label>Описание <textarea name="description" rows="3" placeholder="Коротко о городе и его роли в сети"></textarea></label>
                     <label>Родительский город
                         <select name="parent">
                             <option value="">Выберите город</option>
@@ -33,15 +61,7 @@
                     </label>
                 </div>
 
-                <div class="upload-buttons">
-                    <label class="upload-btn" for="photo-input">📷 + Фото</label>
-                    <input type="file" id="photo-input" accept="image/*" class="upload-input">
-
-                    <label class="upload-btn" for="video-input">🎬 + Видео</label>
-                    <input type="file" id="video-input" accept="video/*" class="upload-input">
-                </div>
-
-                <button type="button" class="btn-primary" id="add-btn">Добавить</button>
+                <button type="submit" class="btn-primary" id="add-btn">Добавить</button>
             </form>
         </main>
 
@@ -53,22 +73,71 @@
     </div>
 
     <script>
-        document.getElementById('add-btn').addEventListener('click', function() {
-            this.style.transform = 'scale(0.98)';
-            setTimeout(() => { this.style.transform = ''; }, 150);
+        // Превью фото — по выбору файла показываем реальный кадр, иначе заглушка
+        document.getElementById('photo-input').addEventListener('change', function() {
+            const img = document.getElementById('photo-preview-img');
+            const label = document.querySelector('label[for="photo-input"]');
+            if (this.files.length > 0) {
+                img.src = URL.createObjectURL(this.files[0]);
+                label.textContent = '✅ ' + this.files[0].name;
+                label.classList.add('file-selected');
+            } else {
+                img.src = 'https://placehold.co/160x120?text=Фото';
+                label.textContent = '📷 + Фото';
+                label.classList.remove('file-selected');
+            }
         });
 
-        document.querySelectorAll('.upload-input').forEach(input => {
-            input.addEventListener('change', function() {
-                const label = document.querySelector(`label[for="${this.id}"]`);
-                if (this.files.length > 0) {
-                    label.textContent = '✅ ' + this.files[0].name;
-                    label.classList.add('file-selected');
+        // Превью видео — по выбору файла показываем реальный проигрыватель, иначе заглушка
+        document.getElementById('video-input').addEventListener('change', function() {
+            const preview = document.getElementById('video-preview');
+            const label = document.querySelector('label[for="video-input"]');
+            if (this.files.length > 0) {
+                const url = URL.createObjectURL(this.files[0]);
+                preview.innerHTML = `<video src="${url}" muted loop autoplay playsinline></video>`;
+                label.textContent = '✅ ' + this.files[0].name;
+                label.classList.add('file-selected');
+            } else {
+                preview.innerHTML = '<div class="video-placeholder" id="video-placeholder">🎬 Видео не выбрано</div>';
+                label.textContent = '🎬 + Видео';
+                label.classList.remove('file-selected');
+            }
+        });
+
+        // Реальная отправка формы на сервер
+        const form = document.getElementById('add-form');
+        const addBtn = document.getElementById('add-btn');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            addBtn.style.transform = 'scale(0.98)';
+            setTimeout(() => { addBtn.style.transform = ''; }, 150);
+
+            addBtn.disabled = true;
+            const originalText = addBtn.textContent;
+            addBtn.textContent = 'Добавляем...';
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch('/add', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    window.location.href = '/grid';
                 } else {
-                    label.textContent = this.id === 'photo-input' ? '📷 + Фото' : '🎬 + Видео';
-                    label.classList.remove('file-selected');
+                    const err = await response.json().catch(() => ({}));
+                    alert('Не удалось добавить город: ' + (err.error || response.statusText));
+                    addBtn.disabled = false;
+                    addBtn.textContent = originalText;
                 }
-            });
+            } catch (err) {
+                alert('Ошибка сети при добавлении города');
+                addBtn.disabled = false;
+                addBtn.textContent = originalText;
+            }
         });
     </script>
 </body>
