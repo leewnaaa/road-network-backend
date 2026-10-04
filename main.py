@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import uvicorn
-from api.handlers import router
+from api.routers.city_router import router
 
 app = FastAPI(title="ДОРСЕТЬ - Дорожная сеть")
 

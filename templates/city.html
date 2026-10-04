@@ -15,18 +15,7 @@
         <main class="grid-page">
             <h1 class="page-title">Города сети</h1>
 
-            <form action="/grid" method="GET" style="margin: 0 18px 16px; display: flex; flex-direction: column; gap: 10px;">
-                <select name="route" style="padding: 9px 11px; border: 1px solid var(--line); border-radius: 9px; font-size: 13px;">
-                    <option value="">Фильтр по дороге</option>
-                    <option value="М-4 «Дон»" {% if route == 'М-4 «Дон»' %}selected{% endif %}>М-4 «Дон»</option>
-                    <option value="М-11 «Нева»" {% if route == 'М-11 «Нева»' %}selected{% endif %}>М-11 «Нева»</option>
-                    <option value="М-12 «Восток»" {% if route == 'М-12 «Восток»' %}selected{% endif %}>М-12 «Восток»</option>
-                    <option value="М-7 «Волга»" {% if route == 'М-7 «Волга»' %}selected{% endif %}>М-7 «Волга»</option>
-                </select>
-
-                <input type="text" name="search" placeholder="🔍 Найти город" value="{{ search }}"
-                       style="padding: 9px 11px; border: 1px solid var(--line); border-radius: 9px; font-size: 13px;">
-
+            <form action="/cities" method="GET" style="margin: 0 18px 16px; display: flex; flex-direction: column; gap: 10px;">
                 <label style="font-size: 12px; font-weight: 700;">
                     Широта до: {{ lat_max }}°
                     <input type="range" name="lat_max" min="40" max="70" step="0.1" value="{{ lat_max }}" style="width: 100%; accent-color: var(--accent);">
@@ -48,7 +37,7 @@
                             <span class="cost-badge">Подробнее</span>
                         </div>
                     </a>
-                    <form action="/{{ city.id }}/delete" method="POST" style="padding: 0 11px 11px;">
+                    <form action="/cities/{{ city.id }}/delete" method="POST" style="padding: 0 11px 11px;">
                         <button type="submit" class="delete-btn" style="width: 100%;">Удалить</button>
                     </form>
                 </div>
@@ -58,8 +47,8 @@
 
         <nav class="bottom-nav">
             <a href="/" class="bottom-nav-link">Лента</a>
-            <a href="/add" class="bottom-nav-link">Добавление</a>
-            <a href="/grid" class="bottom-nav-link active">Плитка</a>
+            <a href="/cities/add" class="bottom-nav-link">Добавление</a>
+            <a href="/cities" class="bottom-nav-link active">Плитка</a>
         </nav>
     </div>
 </body>

@@ -17,7 +17,7 @@
             <h1 class="page-title">Добавление города</h1>
             <p class="page-subtitle">Название, фото и видео города</p>
 
-            <form class="add-form" id="add-form" action="/add" method="POST">
+            <form class="add-form" id="add-form" action="/cities/add" method="POST">
                 <div class="upload-section">
                     <div class="upload-item">
                         <div class="upload-preview" id="photo-preview">
@@ -78,7 +78,7 @@
             </script>
 
             {% else %}
-            <form class="add-form" action="/add/{{ draft.id }}/publish" method="POST">
+            <form class="add-form" action="/cities/{{ draft.id }}/publish" method="POST">
                 <h1 class="page-title">{{ draft.name }}</h1>
 
                 <div class="upload-section" style="margin: 0 18px 14px;">
@@ -86,13 +86,13 @@
                         <div class="upload-preview">
                             <img src="{{ draft.image_url }}" alt="{{ draft.name }}">
                         </div>
-                        <p class="page-subtitle" style="margin: 0;">Фото по умолчанию</p>
+                        <p class="page-subtitle" style="margin: 0;">Фото</p>
                     </div>
                     <div class="upload-item">
                         <div class="upload-preview">
                             <video src="{{ draft.video_url }}" muted loop autoplay playsinline></video>
                         </div>
-                        <p class="page-subtitle" style="margin: 0;">Видео по умолчанию</p>
+                        <p class="page-subtitle" style="margin: 0;">Видео</p>
                     </div>
                 </div>
 
@@ -109,14 +109,6 @@
                     <label>Долгота
                         <input type="number" step="any" name="lon" value="{{ '' if draft.lon is none else draft.lon }}" required>
                     </label>
-                    <label>Родительский город
-                        <select name="parent_id">
-                            <option value="">Нет (корневой узел)</option>
-                            {% for c in parent_options %}
-                                <option value="{{ c.id }}" {% if draft.parent_id == c.id %}selected{% endif %}>{{ c.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </label>
                 </div>
 
                 <button type="submit" class="btn-primary">Опубликовать</button>
@@ -126,8 +118,8 @@
 
         <nav class="bottom-nav">
             <a href="/" class="bottom-nav-link">Лента</a>
-            <a href="/add" class="bottom-nav-link active">Добавление</a>
-            <a href="/grid" class="bottom-nav-link">Плитка</a>
+            <a href="/cities/add" class="bottom-nav-link active">Добавление</a>
+            <a href="/cities" class="bottom-nav-link">Плитка</a>
         </nav>
     </div>
 </body>

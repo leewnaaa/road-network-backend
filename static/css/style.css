@@ -394,6 +394,23 @@ main {
     border-radius: 14px;
 }
 
+.delete-btn {
+    background-color: transparent;
+    color: var(--accent);
+    border: 2px solid var(--accent);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+.delete-btn:hover {
+    background-color: var(--accent);
+    color: #fff;
+}
+
 /* ============================================
    ДОБАВЛЕНИЕ (add.html) — форма
    ============================================ */
@@ -407,8 +424,8 @@ main {
 }
 
 .upload-section {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 10px;
 }
 
