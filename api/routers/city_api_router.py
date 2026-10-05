@@ -26,7 +26,6 @@ async def list_cities(
     return await service.list_published(user_id, route, search, lat_max)
 
 
-# --- статические пути объявлены раньше путей с {city_id} ---
 @router.get("/feed", response_model=CityFeedOut, summary="Лента без id (самая новая)")
 async def feed_first(
     user_id: int = Depends(get_current_user_id),

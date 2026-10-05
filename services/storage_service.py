@@ -11,7 +11,6 @@ from core.minio_client import get_minio
 
 MediaKind = Literal["image", "video"]
 
-# content-type -> расширение (белый список)
 RULES: dict[str, dict] = {
     "image": {
         "prefix": "img",
@@ -32,9 +31,15 @@ RULES: dict[str, dict] = {
     },
 }
 
+from pathlib import Path
+
+EXT_FALLBACK = {
+    "image": {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"},
+    "video": {".mp4": "video/mp4", ".webm": "video/webm"},
+}
+
 
 class StorageService:
-    """Работа с MinIO: загрузка и удаление файлов. В БД хранится только имя файла."""
 
     def __init__(self):
         self.client = get_minio()
@@ -43,12 +48,16 @@ class StorageService:
     async def upload(self, file: UploadFile, kind: MediaKind) -> str:
         rules = RULES[kind]
 
-        ext = rules["types"].get(file.content_type)
+        content_type = (file.content_type or "").lower()
+        if content_type in ("", "application/octet-stream"):
+            suffix = Path(file.filename or "").suffix.lower()
+            content_type = EXT_FALLBACK[kind].get(suffix, content_type)
+
+        ext = rules["types"].get(content_type)
         if ext is None:
             allowed = ", ".join(rules["types"])
             raise HTTPException(415, f"Недопустимый тип файла ({kind}). Разрешено: {allowed}")
 
-        # размер определяем по самому потоку, а не по заголовку клиента
         file.file.seek(0, os.SEEK_END)
         size = file.file.tell()
         file.file.seek(0)
@@ -75,7 +84,6 @@ class StorageService:
         return filename
 
     async def delete(self, filename: str | None) -> None:
-        """Удаление без исключений: используется при откате, ошибка тут не должна маскировать основную."""
         if not filename:
             return
         try:

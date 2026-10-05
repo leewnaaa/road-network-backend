@@ -11,7 +11,6 @@ from schemas.city import (
 )
 from services.storage_service import StorageService
 
-# Из какого статуса в какой можно перейти. Вернуть в черновик нельзя.
 ALLOWED_TRANSITIONS: dict[str, set[str]] = {
     "draft": {"published", "deleted"},
     "published": {"deleted"},
@@ -20,7 +19,6 @@ ALLOWED_TRANSITIONS: dict[str, set[str]] = {
 
 
 class CityApiService:
-    """Бизнес-логика домена услуг для REST API."""
 
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -28,9 +26,7 @@ class CityApiService:
         self.likes = LikeRepository(db)
         self.storage = StorageService()
 
-    # ---------- вспомогательное ----------
     async def _get_visible(self, city_id: int) -> City:
-        """Удалённые клиенту не передаются: для него их как будто нет."""
         city = await self.cities.get_by_id(city_id)
         if city is None or city.status == "deleted":
             raise HTTPException(404, "Услуга не найдена")
@@ -53,7 +49,6 @@ class CityApiService:
         liked = await self.likes.is_liked(user_id, city.id)
         return CityFeedOut.from_city(city, likes_count, user_id, liked_by_me=int(liked))
 
-    # ---------- GET список с фильтрацией ----------
     async def list_published(
         self, user_id: int, route: str, search: str, lat_max: float | None
     ) -> list[CityCardOut]:
@@ -63,7 +58,6 @@ class CityApiService:
         likes_map = await self.likes.count_map([c.id for c in cities])
         return [CityCardOut.from_city(c, likes_map.get(c.id, 0), user_id) for c in cities]
 
-    # ---------- GET лента ----------
     async def get_feed(self, user_id: int, city_id: int | None, next_: bool) -> CityFeedOut:
         if city_id is None:
             city = await self.cities.get_newest_published()
@@ -74,20 +68,19 @@ class CityApiService:
             if next_:
                 city = (
                     await self.cities.get_older_published(city)
-                    or await self.cities.get_newest_published()   # дошли до конца, начинаем заново
+                    or await self.cities.get_newest_published()
                 )
         if city is None:
             raise HTTPException(404, "Опубликованных услуг пока нет")
         return await self._feed_out(city, user_id)
 
-    # ---------- GET черновик ----------
+
     async def get_draft(self, user_id: int) -> CityOut:
         draft = await self.cities.get_draft(user_id)
         if draft is None:
             raise HTTPException(404, "Черновика нет")
         return CityOut.from_city(draft)
 
-    # ---------- POST добавление ----------
     async def create_draft(
         self, user_id: int, name: str, photo: UploadFile, video: UploadFile
     ) -> CityOut:
@@ -121,10 +114,10 @@ class CityApiService:
             raise
         return CityOut.from_city(city)
 
-    # ---------- PUT публикация ----------
+
     async def publish(self, user_id: int, city_id: int, data: CityPublishIn) -> CityOut:
         city = await self._get_own(user_id, city_id)
-        self._move(city, "published")          # 409, если это не черновик
+        self._move(city, "published")
         city.description = data.description
         city.route = data.route
         city.lat = data.lat
@@ -133,13 +126,13 @@ class CityApiService:
         await self.db.commit()
         return CityOut.from_city(city)
 
-    # ---------- DELETE (soft) ----------
+
     async def delete(self, user_id: int, city_id: int) -> None:
         city = await self._get_own(user_id, city_id)
         self._move(city, "deleted")
         await self.db.commit()
 
-    # ---------- POST like ----------
+
     async def set_like(self, user_id: int, city_id: int, like: int) -> LikeOut:
         city = await self._get_visible(city_id)
         if city.status != "published":
