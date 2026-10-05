@@ -6,10 +6,10 @@ from models.city import City
 from repositories.city_repository import CityRepository
 from repositories.like_repository import LikeRepository
 
+from core.current_user import CURRENT_USER_ID
+
 DEFAULT_IMAGE_URL = "/static/img/default-city.jpg"
 DEFAULT_VIDEO_URL = "/static/img/default-city.mp4"
-CURRENT_USER_ID = 1  # авторизации в проекте нет — всё от тестового пользователя
-
 
 class CityService:
     """Бизнес-логика: заглушки медиа, правила черновика/публикации, выдача данных для шаблонов."""
@@ -62,7 +62,7 @@ class CityService:
 
     # ---------- Плитка ----------
     async def get_grid_entries(self, lat_max: float | None) -> list[dict]:
-        cities = await self.cities.get_published_filtered(lat_max)
+        cities = await self.cities.get_published_filtered(lat_max=lat_max)
         likes_map = await self.likes.count_map([c.id for c in cities])
         return [
             self._serialize(self._with_media_defaults(c), likes_map.get(c.id, 0))

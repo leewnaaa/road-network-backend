@@ -1,14 +1,18 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, CheckConstraint
 from sqlalchemy.sql import func
 from db.base import Base
 
+
 class City(Base):
     __tablename__ = "cities"
+    __table_args__ = (
+        CheckConstraint("status IN ('draft', 'published', 'deleted')", name="ck_cities_status"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
     description = Column(String(500), nullable=True)
-    status = Column(String(20), nullable=False, default="draft")
+    status = Column(String(20), nullable=False, default="draft", server_default="draft")
     image_url = Column(String(255), nullable=True)
     video_url = Column(String(255), nullable=True)
     route = Column(String(100), nullable=True)
