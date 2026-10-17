@@ -16,7 +16,6 @@ class LikeRepository:
         return result.scalar_one()
 
     async def count_map(self, city_ids: list[int]) -> dict[int, int]:
-        """{city_id: количество лайков} одним запросом, COUNT + GROUP BY в БД."""
         if not city_ids:
             return {}
         result = await self.db.execute(
@@ -33,7 +32,6 @@ class LikeRepository:
         return result.first() is not None
 
     async def add(self, user_id: int, city_id: int) -> None:
-        """Идемпотентно: повторный лайк не создаёт дубль и не падает."""
         await self.db.execute(
             pg_insert(Like)
             .values(user_id=user_id, city_id=city_id)

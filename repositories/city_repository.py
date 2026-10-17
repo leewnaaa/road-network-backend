@@ -5,7 +5,6 @@ from models.city import City
 
 
 class CityRepository:
-    """Слой доступа к данным: только запросы к БД, никакой бизнес-логики."""
 
     def __init__(self, db: AsyncSession):
         self.db = db
