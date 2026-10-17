@@ -16,7 +16,7 @@ alembic upgrade head          # таблицы + пользователь с id=
 python main.py                # http://localhost:8000 , Swagger: /docs
 ```
 
-Файл `.env` (не коммитить):
+Файл `.env`:
 
 ```env
 DB_HOST=localhost
