@@ -1,0 +1,39 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName DejaVu Sans
+hide circle
+skinparam linetype ortho
+title ER-диаграмма базы данных (PostgreSQL)
+
+entity "users" as users {
+  * id : integer <<PK>>
+  --
+  * username : varchar(50) <<UNIQUE>>
+  password : varchar(255)  /' bcrypt-хэш '/
+}
+entity "cities" as cities {
+  * id : integer <<PK>>
+  --
+  * name : varchar(100)
+  description : varchar(500)
+  * status : varchar(20)  /' draft | published | deleted '/
+  image_url : varchar(255)
+  video_url : varchar(255)
+  route : varchar(100)
+  lat : float
+  lon : float
+  * creator_id : integer <<FK users.id>>
+  created_at : timestamptz
+  published_at : timestamptz
+}
+entity "likes" as likes {
+  * id : integer <<PK>>
+  --
+  * user_id : integer <<FK users.id>>
+  * city_id : integer <<FK cities.id>>
+  UNIQUE(user_id, city_id)
+}
+users ||--o{ cities : creator_id
+users ||--o{ likes : user_id
+cities ||--o{ likes : city_id
+@enduml

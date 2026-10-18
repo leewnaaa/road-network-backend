@@ -1,0 +1,120 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName DejaVu Sans
+skinparam classAttributeIconSize 0
+left to right direction
+title Диаграмма классов веб-сервиса
+
+package "Роутеры" {
+  class UserApiRouter {
+    +register(data: UserRegisterIn): UserOut
+    +login(data: UserLoginIn): UserOut
+    +logout(session: SessionData): MessageOut
+    +me(session: SessionData): UserOut
+  }
+  class CityApiRouter {
+    +list_cities(route, search, lat_max, user_id): list[CityCardOut]
+    +feed_first(user_id): CityFeedOut
+    +feed_by_id(city_id, next_, user_id): CityFeedOut
+    +get_draft(user_id): CityOut
+    +create_city(name, photo, video, user_id): CityOut
+    +publish_city(city_id, data, user_id): CityOut
+    +delete_city(city_id, user_id): void
+    +like_city(city_id, data, user_id): LikeOut
+  }
+}
+
+package "Сервисы" {
+  class UserService {
+    +register(data: UserRegisterIn): UserOut
+    +authenticate(data: UserLoginIn): User
+  }
+  class SessionService {
+    +create(user_id: int, username: str): str
+    +get(session_id: str): SessionData
+    +delete(session_id: str): void
+  }
+  class CityApiService {
+    +list_published(user_id, route, search, lat_max): list[CityCardOut]
+    +get_feed(user_id, city_id, next_): CityFeedOut
+    +get_draft(user_id): CityOut
+    +create_draft(user_id, name, photo, video): CityOut
+    +publish(user_id, city_id, data): CityOut
+    +delete(user_id, city_id): void
+    +set_like(user_id, city_id, like): LikeOut
+  }
+  class SessionData <<dataclass>> {
+    +session_id: str
+    +user_id: int
+    +username: str
+  }
+  class StorageService {
+    +upload(file: UploadFile, kind: str): str
+    +delete(filename: str): void
+  }
+}
+
+package "Репозитории" {
+  class UserRepository {
+    +get_by_username(username): User
+    +add(user: User): void
+  }
+  class CityRepository {
+    +get_by_id(city_id): City
+    +get_published_filtered(route, search, lat_max): list[City]
+    +get_draft(user_id): City
+    +get_newest_published(): City
+    +get_older_published(current: City): City
+    +add(city: City): void
+  }
+  class LikeRepository {
+    +count_for_city(city_id): int
+    +is_liked(user_id, city_id): bool
+    +add(user_id, city_id): void
+    +remove(user_id, city_id): void
+  }
+}
+
+package "Модели" {
+  class User {
+    +id: int
+    +username: str
+    +password: str
+  }
+  class City {
+    +id: int
+    +name: str
+    +description: str
+    +status: str
+    +image_url: str
+    +video_url: str
+    +route: str
+    +lat: float
+    +lon: float
+    +creator_id: int
+    +created_at: datetime
+    +published_at: datetime
+  }
+  class Like {
+    +id: int
+    +user_id: int
+    +city_id: int
+  }
+}
+
+UserApiRouter ..> UserService
+UserApiRouter ..> SessionService
+CityApiRouter ..> CityApiService
+CityApiRouter ..> SessionService
+UserService --> UserRepository
+CityApiService --> CityRepository
+CityApiService --> LikeRepository
+CityApiService --> StorageService
+SessionService ..> SessionData
+UserRepository ..> User
+CityRepository ..> City
+LikeRepository ..> Like
+User "1" -- "0..*" City : создаёт
+User "1" -- "0..*" Like : ставит
+City "1" -- "0..*" Like : получает
+@enduml

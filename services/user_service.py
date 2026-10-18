@@ -7,7 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.user import User
 from repositories.user_repository import UserRepository
-from schemas.user import MessageOut, UserOut, UserRegisterIn
+from schemas.user import UserLoginIn, UserOut, UserRegisterIn
+
+
+# Хэш несуществующего пароля: bcrypt выполняется даже для неизвестного логина
+_DUMMY_HASH = bcrypt.hashpw(b"dummy-password", bcrypt.gensalt()).decode("utf-8")
 
 
 class UserService:
@@ -31,9 +35,13 @@ class UserService:
             raise HTTPException(409, "Пользователь с таким логином уже существует")
         return UserOut.model_validate(user)
 
-    # --- заглушки под 4-ю лабораторную ---
-    async def login_stub(self) -> MessageOut:
-        return MessageOut(message="Заглушка: аутентификация будет реализована в лабораторной 4")
-
-    async def logout_stub(self) -> MessageOut:
-        return MessageOut(message="Заглушка: деавторизация будет реализована в лабораторной 4")
+    async def authenticate(self, data: UserLoginIn) -> User:
+        """Проверка логина/пароля. Одинаковая ошибка для неизвестного логина и неверного пароля."""
+        user = await self.users.get_by_username(data.username)
+        hashed = user.password if user and user.password else _DUMMY_HASH   # выравниваем время ответа
+        ok = await asyncio.to_thread(
+            bcrypt.checkpw, data.password.encode("utf-8"), hashed.encode("utf-8")
+        )
+        if user is None or not user.password or not ok:
+            raise HTTPException(401, "Неверный логин или пароль")
+        return user

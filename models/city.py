@@ -15,7 +15,6 @@ class City(Base):
     status = Column(String(20), nullable=False, default="draft", server_default="draft")
     image_url = Column(String(255), nullable=True)
     video_url = Column(String(255), nullable=True)
-    route = Column(String(100), nullable=True)
     lat = Column(Float, nullable=True)
     lon = Column(Float, nullable=True)
     creator_id = Column(Integer, ForeignKey("users.id"), nullable=False)

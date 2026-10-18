@@ -1,14 +1,11 @@
-from pydantic import BaseModel, ConfigDict, Field
-
-
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class UserRegisterIn(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
-    username: str = Field(min_length=3, max_length=50)
-    password: str = Field(min_length=6, max_length=72)
+    username: str = Field(min_length=3, max_length=50, description="Логин (уникальный)", examples=["creator1"])
+    password: str = Field(min_length=6, max_length=72, description="Пароль, не длиннее 72 байт", examples=["secret123"])
 
     @field_validator("password")
     @classmethod
@@ -21,15 +18,15 @@ class UserRegisterIn(BaseModel):
 class UserLoginIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    username: str
-    password: str
+    username: str = Field(description="Логин", examples=["creator1"])
+    password: str = Field(description="Пароль", examples=["secret123"])
 
 
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
-    username: str
+    id: int = Field(description="Идентификатор пользователя")
+    username: str = Field(description="Логин")
 
 
 class MessageOut(BaseModel):

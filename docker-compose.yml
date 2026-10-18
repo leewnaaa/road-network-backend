@@ -26,6 +26,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7-alpine
+    container_name: dorset-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
   adminer:
     image: adminer:latest
     container_name: dorset-adminer
@@ -37,3 +46,4 @@ services:
 volumes:
   minio_data:
   postgres_data:
+  redis_data:

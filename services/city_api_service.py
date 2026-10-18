@@ -44,21 +44,21 @@ class CityApiService:
             raise HTTPException(409, f"Нельзя перевести услугу из «{city.status}» в «{new_status}»")
         city.status = new_status
 
-    async def _feed_out(self, city: City, user_id: int) -> CityFeedOut:
+    async def _feed_out(self, city: City, user_id: int | None) -> CityFeedOut:
         likes_count = await self.likes.count_for_city(city.id)
-        liked = await self.likes.is_liked(user_id, city.id)
+        liked = user_id is not None and await self.likes.is_liked(user_id, city.id)
         return CityFeedOut.from_city(city, likes_count, user_id, liked_by_me=int(liked))
 
     async def list_published(
-        self, user_id: int, route: str, search: str, lat_max: float | None
+        self, user_id: int | None, lat_max: float | None
     ) -> list[CityCardOut]:
         cities = await self.cities.get_published_filtered(
-            route=route, search=search, lat_max=lat_max
+            lat_max=lat_max
         )
         likes_map = await self.likes.count_map([c.id for c in cities])
         return [CityCardOut.from_city(c, likes_map.get(c.id, 0), user_id) for c in cities]
 
-    async def get_feed(self, user_id: int, city_id: int | None, next_: bool) -> CityFeedOut:
+    async def get_feed(self, user_id: int | None, city_id: int | None, next_: bool) -> CityFeedOut:
         if city_id is None:
             city = await self.cities.get_newest_published()
         else:
@@ -119,7 +119,6 @@ class CityApiService:
         city = await self._get_own(user_id, city_id)
         self._move(city, "published")
         city.description = data.description
-        city.route = data.route
         city.lat = data.lat
         city.lon = data.lon
         city.published_at = datetime.now(timezone.utc)

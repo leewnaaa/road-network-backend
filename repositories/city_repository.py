@@ -14,13 +14,9 @@ class CityRepository:
         return result.scalar_one_or_none()
 
     async def get_published_filtered(
-        self, route: str = "", search: str = "", lat_max: float | None = None
+        self, lat_max: float | None = None
     ) -> list[City]:
         stmt = select(City).where(City.status == "published")
-        if route:
-            stmt = stmt.where(City.route == route)
-        if search:
-            stmt = stmt.where(City.name.ilike(f"%{search}%"))
         if lat_max is not None:
             stmt = stmt.where(City.lat <= lat_max)
         result = await self.db.execute(stmt.order_by(City.name))

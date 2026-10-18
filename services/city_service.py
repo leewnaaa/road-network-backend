@@ -30,7 +30,6 @@ class CityService:
             "id": city.id,
             "name": city.name,
             "description": city.description,
-            "route": city.route,
             "lat": city.lat,
             "lon": city.lon,
             "image_url": city.image_url,
@@ -85,7 +84,7 @@ class CityService:
         self.cities.add(new_city)
         await self.cities.commit()
 
-    async def publish_draft(self, city_id: int, description: str, route: str,
+    async def publish_draft(self, city_id: int, description: str,
                              lat: float, lon: float) -> None:
         city = await self.cities.get_by_id(city_id)
         if city is None or city.status != "draft" or city.creator_id != CURRENT_USER_ID:

@@ -1,0 +1,81 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName DejaVu Sans
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 230
+skinparam ParticipantPadding 14
+title Бизнес-процесс «Публикация и просмотр услуги»: HTTP-запросы к веб-сервису
+
+actor "Клиент\n(SPA)" as C
+participant "UserApiRouter" as UR
+participant "UserService" as US
+participant "SessionService" as SS
+participant "CityApiRouter" as CR
+participant "CityApiService" as CS
+participant "StorageService" as ST
+
+== 1. Аутентификация (гость → создатель) ==
+C -> UR : POST /api/users/login\nlogin(data: UserLoginIn)
+UR -> US : authenticate(data: UserLoginIn)
+US --> UR : User(id, username)
+UR -> SS : create(user_id: int, username: str)
+SS --> UR : session_id: str
+UR --> C : 200 UserOut(id, username)\nSet-Cookie: session_id
+
+note over CR, SS
+  Далее в каждом запросе с кукой session_id роутер вызывает
+  SessionService.get(session_id): SessionData
+  (у методов создателя нет куки или сессии → 401)
+end note
+
+== 2. Список услуг с фильтром (публичный метод) ==
+C -> CR : GET /api/cities?route=М-4&search=Рост&lat_max=55\nlist_cities(route, search, lat_max, user_id)
+CR -> SS : get(session_id)
+SS --> CR : SessionData(user_id)
+CR -> CS : list_published(user_id, route, search, lat_max)
+CS --> CR : list[CityCardOut]
+CR --> C : 200 [CityCardOut(id, name, route, lat, lon, likes_count, is_mine)]
+
+== 3. Добавление услуги с фото и видео (создатель) ==
+C -> CR : POST /api/cities (multipart: name, photo, video)\ncreate_city(name, photo, video, user_id)
+CR -> SS : get(session_id)
+SS --> CR : SessionData(user_id)
+CR -> CS : create_draft(user_id, name, photo, video)
+CS -> ST : upload(photo: UploadFile, kind="image")
+ST --> CS : image_name: str
+CS -> ST : upload(video: UploadFile, kind="video")
+ST --> CS : video_name: str
+CS --> CR : CityOut(id, name, status="draft", image_url, video_url)
+CR --> C : 201 CityOut
+
+== 4. Получение полей черновика (создатель) ==
+C -> CR : GET /api/cities/draft\nget_draft(user_id)
+CR -> CS : get_draft(user_id)
+CS --> CR : CityOut(status="draft")
+CR --> C : 200 CityOut
+
+== 5. Публикация услуги (создатель) ==
+C -> CR : PUT /api/cities/{city_id}/publish\npublish_city(city_id, data: CityPublishIn, user_id)
+CR -> CS : publish(user_id, city_id, data: CityPublishIn)
+CS --> CR : CityOut(status="published")
+CR --> C : 200 CityOut
+
+== 6. Лента без id (публичный метод) ==
+C -> CR : GET /api/cities/feed\nfeed_first(user_id)
+CR -> CS : get_feed(user_id, city_id=None, next_=False)
+CS --> CR : CityFeedOut
+CR --> C : 200 CityFeedOut(id, video_url, likes_count, liked_by_me)
+
+== 7. Лента по id, следующая услуга (публичный метод) ==
+C -> CR : GET /api/cities/feed/{city_id}?next=true\nfeed_by_id(city_id, next_, user_id)
+CR -> CS : get_feed(user_id, city_id, next_=True)
+CS --> CR : CityFeedOut
+CR --> C : 200 CityFeedOut
+
+== 8. Лайк (авторизованный пользователь) ==
+C -> CR : POST /api/cities/{city_id}/like\nlike_city(city_id, data: LikeIn, user_id)
+CR -> CS : set_like(user_id, city_id, like=1)
+CS --> CR : LikeOut(city_id, like, likes_count)
+CR --> C : 200 LikeOut
+@enduml
