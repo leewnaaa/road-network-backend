@@ -28,6 +28,9 @@ app = FastAPI(
     ),
     version="4.0",
     lifespan=lifespan,
+    # operationId = имя функции-обработчика (list_cities, login, ...):
+    # кодогенерация фронтенда получает понятные методы api.cities.listCities(), api.users.login()
+    generate_unique_id_function=lambda route: route.name,
 )
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
